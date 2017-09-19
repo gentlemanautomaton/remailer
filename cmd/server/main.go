@@ -1,0 +1,39 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/dustywilson/remailer"
+	guerrilla "github.com/flashmob/go-guerrilla"
+	"github.com/flashmob/go-guerrilla/backends"
+	"github.com/flashmob/go-guerrilla/log"
+)
+
+func main() {
+	d := guerrilla.Daemon{
+		Config: &guerrilla.AppConfig{
+			LogFile: log.OutputStdout.String(),
+			BackendConfig: backends.BackendConfig{
+				"validate_process": "Remailer",
+				"save_process":     "HeadersParser|Debugger|Hasher|Header|Remailer",
+				"remailer_dir":     "./config",
+			},
+			AllowedHosts: []string{"."}, // everyone and everything
+			Servers: []guerrilla.ServerConfig{{
+				Hostname:        "dnscow",
+				ListenInterface: "0.0.0.0:5555",
+				IsEnabled:       true,
+			}},
+		},
+	}
+	d.AddProcessor("Remailer", remailer.Processor)
+
+	err := d.Start()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	select {} // hang out!
+}
