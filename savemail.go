@@ -21,14 +21,14 @@ func (r *remailer) saveMail(e *mail.Envelope) (backends.Result, error) {
 		if err.Error() == ErrReject.Error() {
 			reject := err.(Reject).Message
 			backends.Log().WithError(backends.NoSuchUser).Info("reject: " + err.(Reject).Message)
-			return backends.NewResult(response.Canned.FailRcptCmd), errors.New(reject)
+			return backends.NewResult(BadRecipient), errors.New(reject)
 		}
 		backends.Log().WithError(backends.NoSuchUser).Info("error: " + err.Error())
-		return backends.NewResult(response.Canned.FailRcptCmd), backends.NoSuchUser
+		return backends.NewResult(BadRecipient), backends.NoSuchUser
 	}
 	if len(addrs) == 0 {
 		backends.Log().WithError(backends.NoSuchUser).Info("user not configured: " + rcpt.String())
-		return backends.NewResult(response.Canned.FailRcptCmd), backends.NoSuchUser
+		return backends.NewResult(BadRecipient), backends.NoSuchUser
 	}
 	// success?
 	backends.Log().Info(fmt.Printf("OK: %s: %+v\n", kind, addrs))

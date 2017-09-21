@@ -2,6 +2,8 @@ package remailer
 
 import (
 	"errors"
+
+	"github.com/flashmob/go-guerrilla/response"
 )
 
 type remailer struct {
@@ -16,3 +18,11 @@ type Reject struct {
 	Message string
 	error
 }
+
+// BadRecipient is an error 550 without a comment
+var BadRecipient = (&response.Response{
+	EnhancedCode: response.BadDestinationMailboxAddress,
+	BasicCode:    550,
+	Class:        response.ClassPermanentFailure,
+	Comment:      "",
+}).String()
