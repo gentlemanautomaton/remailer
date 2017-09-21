@@ -7,7 +7,8 @@ import (
 )
 
 type remailer struct {
-	Dir string `json:"remailer_dir"`
+	Dir           string `json:"remailer_dir"`
+	ForwarderAddr string `json:"remailer_forwarder_addr"`
 }
 
 // ErrReject indicates that this is a rejection message

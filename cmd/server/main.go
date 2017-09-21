@@ -15,9 +15,10 @@ func main() {
 		Config: &guerrilla.AppConfig{
 			LogFile: log.OutputStdout.String(),
 			BackendConfig: backends.BackendConfig{
-				"validate_process": "Remailer",
-				"save_process":     "HeadersParser|Debugger|Hasher|Header|Remailer",
-				"remailer_dir":     "./config",
+				"validate_process":        "Remailer",
+				"save_process":            "HeadersParser|Debugger|Hasher|Header|Remailer",
+				"remailer_dir":            "./config",
+				"remailer_forwarder_addr": "127.0.0.1:25",
 			},
 			AllowedHosts: []string{"."}, // everyone and everything
 			Servers: []guerrilla.ServerConfig{{
