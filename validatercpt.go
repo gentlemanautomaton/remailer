@@ -18,10 +18,10 @@ func (r *remailer) validateRCPT(e *mail.Envelope) (backends.Result, error) {
 	rcpt := e.RcptTo[rcptListSize-1]
 	addrs, kind, err := r.expandAddr(rcpt)
 	if err != nil {
-		if err.Error() == ErrReject.Error() {
-			reject := err.(Reject).Message
-			backends.Log().WithError(backends.NoSuchUser).Info("reject: " + err.(Reject).Message)
-			return backends.NewResult(BadRecipient), errors.New(reject)
+		if reject, ok := err.(Reject); ok {
+			rejectMsg := reject.Message
+			backends.Log().WithError(backends.NoSuchUser).Info("reject: " + rejectMsg)
+			return backends.NewResult(BadRecipient), errors.New(rejectMsg)
 		}
 		backends.Log().WithError(backends.NoSuchUser).Info("error: " + err.Error())
 		return backends.NewResult(BadRecipient), backends.NoSuchUser
