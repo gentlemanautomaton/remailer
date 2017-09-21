@@ -7,6 +7,7 @@ import (
 )
 
 type remailer struct {
+	HeloName      string `json:"remailer_heloname"`
 	Dir           string `json:"remailer_dir"`
 	ForwarderAddr string `json:"remailer_forwarder_addr"`
 }
