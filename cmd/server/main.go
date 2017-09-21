@@ -19,7 +19,7 @@ func main() {
 				"validate_process":        "Remailer",
 				"save_process":            "HeadersParser|Debugger|Hasher|Header|Remailer",
 				"remailer_heloname":       hostname,
-				"remailer_dir":            "./config",
+				"remailer_dir":            "/config",
 				"remailer_forwarder_addr": "smtp:25",
 			},
 			AllowedHosts: []string{"."}, // everyone and everything
