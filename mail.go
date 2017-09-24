@@ -24,11 +24,13 @@ func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope) (backends.Re
 	w, err := sc.Data()
 	if err != nil {
 		// TODO: what happen
+		backends.Log().WithError(err).Info("mail.go:27?")
 	}
 	io.Copy(w, &e.Data)
 	err = w.Close()
 	if err != nil {
 		// TODO: what happen
+		backends.Log().WithError(err).Info("mail.go:33?")
 	}
 
 	return nil, nil
