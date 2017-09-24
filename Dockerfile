@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/dustywilson/remailer
 COPY . .
 
 WORKDIR /go/src/github.com/dustywilson/remailer/cmd/server
-RUN ./build.sh
+RUN bash build.sh
 
 WORKDIR /config
 CMD ["/go/bin/server"]
