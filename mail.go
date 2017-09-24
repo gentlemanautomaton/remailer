@@ -18,19 +18,33 @@ func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope) (backends.Re
 	}
 	sc.Close()
 
-	sc.Hello(r.HeloName)
-	sc.Mail(e.MailFrom.String())
-	sc.Rcpt(addr.String())
+	err = sc.Hello(r.HeloName)
+	if err != nil {
+		// TODO: what happen
+		backends.Log().WithError(err).Info("mail.go:24?")
+	}
+	err = sc.Mail(e.MailFrom.String()) // I wonder if this should be something else, such as from a domain we control?  FIXME?
+	if err != nil {
+		// TODO: what happen
+		backends.Log().WithError(err).Info("mail.go:29?")
+	}
+	err = sc.Rcpt(addr.String())
+	if err != nil {
+		// TODO: what happen
+		backends.Log().WithError(err).Info("mail.go:34?")
+	}
 	w, err := sc.Data()
 	if err != nil {
 		// TODO: what happen
-		backends.Log().WithError(err).Info("mail.go:27?")
+		backends.Log().WithError(err).Info("mail.go:39?")
 	}
-	io.Copy(w, &e.Data)
+	if w != nil {
+		io.Copy(w, &e.Data)
+	}
 	err = w.Close()
 	if err != nil {
 		// TODO: what happen
-		backends.Log().WithError(err).Info("mail.go:33?")
+		backends.Log().WithError(err).Info("mail.go:47?")
 	}
 
 	return nil, nil
