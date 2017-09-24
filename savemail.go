@@ -35,11 +35,17 @@ func (r *remailer) saveMail(e *mail.Envelope) (backends.Result, error) {
 
 		for _, addr := range addrs {
 			if !addr.IsEmpty() && !addr.Address.IsEmpty() {
-				return r.sendMessage(addr.Address, e)
+				if be, err := r.sendMessage(addr.Address, e); err != nil {
+					return be, err
+				}
 			} else if addr.URL != nil {
-				return r.postMessage(*addr.URL, e)
+				if be, err := r.postMessage(*addr.URL, e); err != nil {
+					return be, err
+				}
 			} else if addr.SMTP != nil {
-				return r.mxMessage(*addr.SMTP, e)
+				if be, err := r.mxMessage(*addr.SMTP, e); err != nil {
+					return be, err
+				}
 			}
 		}
 	}
