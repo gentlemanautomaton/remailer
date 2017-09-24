@@ -1,4 +1,4 @@
 #!/bin/bash
 
-env | grep -vi key
-docker build --build-arg SOURCE_COMMIT=$SOURCE_COMMIT -t $IMAGE_NAME .
+env | grep _
+docker build --build-arg THIS_THING=IS_THIS_THING --build-arg SOURCE_COMMIT=$SOURCE_COMMIT -t $IMAGE_NAME .
