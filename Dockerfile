@@ -1,9 +1,8 @@
-ARG SOURCE_COMMIT
 FROM golang:latest
+ENV SOURCE_COMMIT=$SOURCE_COMMIT
+RUN env
 
 EXPOSE 25
-
-RUN env
 
 WORKDIR /go/src/github.com/dustywilson/remailer
 COPY . .
