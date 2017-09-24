@@ -10,7 +10,12 @@ import (
 	"github.com/flashmob/go-guerrilla/log"
 )
 
+var commitVersion string
+
 func main() {
+	if commitVersion != "" {
+		commitVersion = "/" + commitVersion
+	}
 	hostname, _ := os.Hostname()
 	d := guerrilla.Daemon{
 		Config: &guerrilla.AppConfig{
@@ -24,7 +29,7 @@ func main() {
 			},
 			AllowedHosts: []string{"."}, // everyone and everything
 			Servers: []guerrilla.ServerConfig{{
-				Hostname:        "dnscow",
+				Hostname:        "dnscow" + commitVersion,
 				ListenInterface: "0.0.0.0:5555",
 				IsEnabled:       true,
 			}},
