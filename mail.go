@@ -10,20 +10,18 @@ import (
 	"github.com/flashmob/go-guerrilla/response"
 )
 
-func (r *remailer) sendMessage(smtpConn *smtp.Client, addr mail.Address, e *mail.Envelope) (backends.Result, error) {
-	if smtpConn == nil {
-		var err error
-		smtpConn, err = smtp.Dial(r.ForwarderAddr)
-		if err != nil {
-			backends.Log().WithError(backends.StorageNotAvailable).Info("smtp: " + err.Error())
-			return backends.NewResult(response.Canned.FailReadErrorDataCmd), errors.New("Temporary Server Error, try again shortly")
-		}
+func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope) (backends.Result, error) {
+	sc, err := smtp.Dial(r.ForwarderAddr)
+	if err != nil {
+		backends.Log().WithError(backends.StorageNotAvailable).Info("smtp: " + err.Error())
+		return backends.NewResult(response.Canned.FailReadErrorDataCmd), errors.New("Temporary Server Error, try again shortly")
 	}
+	sc.Close()
 
-	smtpConn.Hello(r.HeloName)
-	smtpConn.Mail(e.MailFrom.String())
-	smtpConn.Rcpt(addr.String())
-	w, err := smtpConn.Data()
+	sc.Hello(r.HeloName)
+	sc.Mail(e.MailFrom.String())
+	sc.Rcpt(addr.String())
+	w, err := sc.Data()
 	if err != nil {
 		// TODO: what happen
 	}
