@@ -16,35 +16,35 @@ func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope) (backends.Re
 		backends.Log().WithError(backends.StorageNotAvailable).Info("smtp: " + err.Error())
 		return backends.NewResult(response.Canned.FailReadErrorDataCmd), errors.New("Temporary Server Error, try again shortly")
 	}
-	sc.Close()
+	defer sc.Close()
 
 	err = sc.Hello(r.HeloName)
 	if err != nil {
 		// TODO: what happen
-		backends.Log().WithError(err).Info("mail.go:24?")
+		backends.Log().WithError(err).Info("mail.go can't say HELO")
 	}
 	err = sc.Mail(e.MailFrom.String()) // I wonder if this should be something else, such as from a domain we control?  FIXME?
 	if err != nil {
 		// TODO: what happen
-		backends.Log().WithError(err).Info("mail.go:29?")
+		backends.Log().WithError(err).Info("mail.go couldn't say MAILFROM")
 	}
 	err = sc.Rcpt(addr.String())
 	if err != nil {
 		// TODO: what happen
-		backends.Log().WithError(err).Info("mail.go:34?")
+		backends.Log().WithError(err).Info("mail.go wasn't able to declare RCPTTO")
 	}
 	w, err := sc.Data()
 	if err != nil {
 		// TODO: what happen
-		backends.Log().WithError(err).Info("mail.go:39?")
+		backends.Log().WithError(err).Info("mail.go failed to start DATA")
 	}
 	if w != nil {
 		io.Copy(w, &e.Data)
-	}
-	err = w.Close()
-	if err != nil {
-		// TODO: what happen
-		backends.Log().WithError(err).Info("mail.go:47?")
+		err = w.Close()
+		if err != nil {
+			// TODO: what happen
+			backends.Log().WithError(err).Info("mail.go tried but couldn't close DATA")
+		}
 	}
 
 	return nil, nil
