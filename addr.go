@@ -2,8 +2,12 @@ package remailer
 
 import (
 	"bufio"
+	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/flashmob/go-guerrilla/mail"
@@ -18,14 +22,65 @@ const (
 	KindPlusFallback   = "plus-fallback"
 )
 
-func getAddrsFromFile(filename string) ([]mail.Address, error) {
+// Address is a superset of mail.Address plus url.URL
+type Address struct {
+	mail.Address
+	URL  *url.URL
+	SMTP *HostPort
+}
+
+// IsEmpty returns true if empty
+func (a *Address) IsEmpty() bool {
+	return a.URL == nil && a.SMTP == nil && a.Address.IsEmpty()
+}
+
+func (a *Address) String() string {
+	if a.URL != nil {
+		return a.URL.String()
+	}
+	if a.SMTP != nil {
+		return a.SMTP.String()
+	}
+	if !a.Address.IsEmpty() {
+		return a.Address.String()
+	}
+	return ""
+}
+
+// HostPort is a "hostname:1234"
+type HostPort struct {
+	Host string
+	Port int
+}
+
+// ParseHostPort will return a HostPort from a string
+func ParseHostPort(in string) (hp HostPort, err error) {
+	host, portStr, err := net.SplitHostPort(in)
+	if err != nil {
+		return
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return
+	}
+	return HostPort{host, port}, nil
+}
+
+func (h *HostPort) String() string {
+	if h == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s:%d", h.Host, h.Port)
+}
+
+func getAddrsFromFile(filename string) ([]Address, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	var addrs = make([]mail.Address, 0)
+	var addrs = make([]Address, 0)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -33,10 +88,38 @@ func getAddrsFromFile(filename string) ([]mail.Address, error) {
 			reject := strings.TrimPrefix(line, "reject:")
 			return nil, Reject{reject, ErrReject}
 		}
-		addr, err := mail.NewAddress(line)
-		if err != nil {
-			return nil, err
+
+		var addr Address
+
+		if strings.HasPrefix(line, "https://") {
+			// if HTTPS URL (we don't support non-HTTPS)
+			u, err := url.Parse(line)
+			if err != nil {
+				return nil, err
+			}
+			addr = Address{URL: u}
+		} else if strings.Contains(line, "://") {
+			// we don't support this URL, so we are skipping this address...  FIXME?
+			continue
+		} else if strings.Contains(line, "@") {
+			// if email address
+			mAddr, err := mail.NewAddress(line)
+			if err != nil {
+				return nil, err
+			}
+			addr = Address{Address: mAddr}
+		} else if strings.Contains(line, ":") {
+			// if SMTP server address
+			hp, err := ParseHostPort(line)
+			if err != nil {
+				return nil, err
+			}
+			addr = Address{SMTP: &hp}
+		} else {
+			// nothing matched, so we are skipping this address...  FIXME?
+			continue
 		}
+
 		addrs = append(addrs, addr)
 	}
 	if err := scanner.Err(); err != nil {
@@ -46,7 +129,7 @@ func getAddrsFromFile(filename string) ([]mail.Address, error) {
 	return addrs, nil
 }
 
-func (r *remailer) expandAddr(rcpt mail.Address) (addrs []mail.Address, kind string, err error) {
+func (r *remailer) expandAddr(rcpt mail.Address) (addrs []Address, kind string, err error) {
 	domainFilename := path.Join(r.Dir, strings.ToLower(rcpt.Host))
 
 	// domain check

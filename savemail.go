@@ -3,7 +3,6 @@ package remailer
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/smtp"
 
 	"github.com/flashmob/go-guerrilla/backends"
@@ -12,12 +11,12 @@ import (
 )
 
 func (r *remailer) saveMail(e *mail.Envelope) (backends.Result, error) {
-	sc, err := smtp.Dial(r.ForwarderAddr)
-	if err != nil {
-		backends.Log().WithError(backends.StorageNotAvailable).Info("smtp: " + err.Error())
-		return backends.NewResult(response.Canned.FailReadErrorDataCmd), errors.New("Temporary Server Error, try again shortly")
-	}
-	defer sc.Close()
+	var sc *smtp.Client
+	defer func() {
+		if sc != nil {
+			sc.Close()
+		}
+	}()
 
 	rcptListSize := len(e.RcptTo)
 	if rcptListSize == 0 {
@@ -43,17 +42,12 @@ func (r *remailer) saveMail(e *mail.Envelope) (backends.Result, error) {
 
 		for _, addr := range addrs {
 			// TODO: possibly support a host:port combo in the forwarding value to just kick the message to that server?
-			sc.Hello(r.HeloName)
-			sc.Mail(e.MailFrom.String())
-			sc.Rcpt(addr.String())
-			w, err := sc.Data()
-			if err != nil {
-				// TODO: what happen
-			}
-			io.Copy(w, &e.Data)
-			err = w.Close()
-			if err != nil {
-				// TODO: what happen
+			if !addr.Address.IsEmpty() {
+				return r.sendMessage(sc, addr.Address, e)
+			} else if addr.URL != nil {
+				return r.postMessage(*addr.URL, e)
+			} else if addr.SMTP != nil {
+				return r.mxMessage(*addr.SMTP, e)
 			}
 		}
 	}

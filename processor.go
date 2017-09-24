@@ -18,8 +18,6 @@ func Processor() backends.Decorator {
 
 		r = bc.(*remailer)
 
-		backends.Log().Info("FRED: " + r.Dir)
-
 		return nil
 	}))
 
