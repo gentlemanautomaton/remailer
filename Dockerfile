@@ -3,8 +3,6 @@ FROM golang:latest
 EXPOSE 25
 
 RUN env
-RUN pwd
-RUN git rev-parse HEAD
 
 WORKDIR /go/src/github.com/dustywilson/remailer
 COPY . .
