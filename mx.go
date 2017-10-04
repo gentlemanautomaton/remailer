@@ -11,7 +11,7 @@ import (
 	"github.com/flashmob/go-guerrilla/response"
 )
 
-func (r *remailer) mxMessage(hp HostPort, e *mail.Envelope) (backends.Result, error) {
+func (r *remailer) mxMessage(hp HostPort, e *mail.Envelope, dBuf *bytes.Buffer) (backends.Result, error) {
 	sc, err := smtp.Dial(hp.String())
 	if err != nil {
 		backends.Log().WithError(backends.StorageNotAvailable).Info("smtp: " + err.Error())
@@ -27,7 +27,7 @@ func (r *remailer) mxMessage(hp HostPort, e *mail.Envelope) (backends.Result, er
 	if err != nil {
 		// TODO: what happen
 	}
-	io.Copy(w, bytes.NewBuffer(e.Data.Bytes()))
+	io.Copy(w, dBuf)
 	err = w.Close()
 	if err != nil {
 		// TODO: what happen
