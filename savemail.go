@@ -10,10 +10,12 @@ import (
 )
 
 func (r *remailer) saveMail(e *mail.Envelope) (backends.Result, error) {
+	e.Lock()
+	defer e.Unlock()
 	rcptListSize := len(e.RcptTo)
 	if rcptListSize == 0 {
 		// not sure what we would do here, so we'll just punt.
-		backends.Log().WithError(backends.NoSuchUser).Info("addresses were supplied")
+		backends.Log().WithError(backends.NoSuchUser).Info("no addresses were supplied")
 		return backends.NewResult(BadRecipient), backends.NoSuchUser
 	}
 	for _, rcpt := range e.RcptTo {

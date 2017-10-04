@@ -1,6 +1,7 @@
 package remailer
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net/smtp"
@@ -26,7 +27,7 @@ func (r *remailer) mxMessage(hp HostPort, e *mail.Envelope) (backends.Result, er
 	if err != nil {
 		// TODO: what happen
 	}
-	io.Copy(w, &e.Data)
+	io.Copy(w, bytes.NewBuffer(e.Data.Bytes()))
 	err = w.Close()
 	if err != nil {
 		// TODO: what happen

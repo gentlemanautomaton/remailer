@@ -1,6 +1,7 @@
 package remailer
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net/smtp"
@@ -39,7 +40,7 @@ func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope) (backends.Re
 		backends.Log().WithError(err).Info("mail.go failed to start DATA")
 	}
 	if w != nil {
-		io.Copy(w, &e.Data)
+		io.Copy(w, bytes.NewBuffer(e.Data.Bytes()))
 		err = w.Close()
 		if err != nil {
 			// TODO: what happen
