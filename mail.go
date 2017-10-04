@@ -11,7 +11,7 @@ import (
 	"github.com/flashmob/go-guerrilla/response"
 )
 
-func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope, dBuf *bytes.Buffer) (backends.Result, error) {
+func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope) (backends.Result, error) {
 	sc, err := smtp.Dial(r.ForwarderAddr)
 	if err != nil {
 		backends.Log().WithError(backends.StorageNotAvailable).Info("smtp: " + err.Error())
@@ -40,7 +40,7 @@ func (r *remailer) sendMessage(addr mail.Address, e *mail.Envelope, dBuf *bytes.
 		backends.Log().WithError(err).Info("mail.go failed to start DATA")
 	}
 	if w != nil {
-		io.Copy(w, dBuf)
+		io.Copy(w, bytes.NewBuffer(e.Data.Bytes()))
 		err = w.Close()
 		if err != nil {
 			// TODO: what happen

@@ -29,7 +29,7 @@ func main() {
 			},
 			AllowedHosts: []string{"."}, // everyone and everything
 			Servers: []guerrilla.ServerConfig{{
-				Hostname:        "dnscow" + commitVersion,
+				Hostname:        "xyzzy" + commitVersion,
 				ListenInterface: "0.0.0.0:5555",
 				IsEnabled:       true,
 			}},

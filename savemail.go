@@ -1,10 +1,8 @@
 package remailer
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/flashmob/go-guerrilla/backends"
 	"github.com/flashmob/go-guerrilla/mail"
@@ -12,8 +10,6 @@ import (
 )
 
 func (r *remailer) saveMail(e *mail.Envelope) (backends.Result, error) {
-	e.Lock()
-	defer e.Unlock()
 	rcptListSize := len(e.RcptTo)
 	if rcptListSize == 0 {
 		// not sure what we would do here, so we'll just punt.
@@ -37,24 +33,26 @@ func (r *remailer) saveMail(e *mail.Envelope) (backends.Result, error) {
 		}
 		backends.Log().Info(fmt.Printf("OK: %s: %+v\n", kind, addrs))
 
-		dBuf := make([]io.Writer, len(addrs))
-		for i := range dBuf {
-			dBuf[i] = new(bytes.Buffer)
-		}
-		w := io.MultiWriter(dBuf...)
-		io.Copy(w, &e.Data)
+		// dBuf := make([]io.Writer, len(addrs))
+		// for i := range dBuf {
+		// 	dBuf[i] = new(bytes.Buffer)
+		// }
+		// w := io.MultiWriter(dBuf...)
+		// io.Copy(w, &e.Data)
 
-		for i, addr := range addrs {
+		for _, addr := range addrs {
+			// e.Data = *(dBuf[i].(*bytes.Buffer))
+
 			if !addr.IsEmpty() && !addr.Address.IsEmpty() {
-				if be, err := r.sendMessage(addr.Address, e, dBuf[i].(*bytes.Buffer)); err != nil {
+				if be, err := r.sendMessage(addr.Address, e); err != nil {
 					return be, err
 				}
 			} else if addr.URL != nil {
-				if be, err := r.postMessage(*addr.URL, e, dBuf[i].(*bytes.Buffer)); err != nil {
+				if be, err := r.postMessage(*addr.URL, e); err != nil {
 					return be, err
 				}
 			} else if addr.SMTP != nil {
-				if be, err := r.mxMessage(*addr.SMTP, e, dBuf[i].(*bytes.Buffer)); err != nil {
+				if be, err := r.mxMessage(*addr.SMTP, e); err != nil {
 					return be, err
 				}
 			}
